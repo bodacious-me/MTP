@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -71,6 +72,7 @@ public class DNSGenerator {
         jsonFileWriter.writeFiles("./names.json", DomainNames);
 
         // Update the Dns records with the new random DNSs
+        
         for (int i = 0; i < 10; i++) {
             String url = "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records/"
                     + myProperties.getIds(i);
@@ -107,13 +109,14 @@ public class DNSGenerator {
                 // messages.add("tg://proxy?server=" + DomainNames.get(j) + "&port=" +
                 // SecretAndPort.get(key)
                 // + "&secret=" + key);
-                String proxyLink = String.format("tg://proxy?server=%s&port=%s&secret=%s",
+                // t.me/proxy?server=<server>&port=<port>&secret=<secret>
+                String proxyLink = String.format("t.me/proxy?server=%s&port=%s&secret=%s",
                         DomainNames.get(j),
                         SecretAndPort.get(key),
                         key);
                 messages.add(proxyLink);
 // https://t.me/share/url?url=https%3A%2F%2Ft.me%2Fproxy%3Fserver%3DKamilla.Liora.Meghan.Karime.Jenson.Kenyon.Muad.com.eriofndiohvndi.shop%26port%3D2142%26secret%3D0954a8517132e5b213c254bb2b563dd2&text=click
-//https://t.me/proxy?server=Kamilla.Liora.Meghan.Karime.Jenson.Kenyon.Muad.com.eriofndiohvndi.shop&port=2142&secret=0954a8517132e5b213c254bb2b563dd2
+//https://t.me/proxy?server=Kamilla.Liora.Meghan.Karime.Jenson.Kenyo.Muad.com.eriofndiohvndi.shop&port=2142&secret=0954a8517132e5b213c254bb2b563dd2
             }
             // 
             try {
@@ -161,9 +164,13 @@ public class DNSGenerator {
         // String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s&parse_mode=HTML",
         // BOT_TOKEN, CHANNEL_ID, shareUrl);
 
-        String url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s",
-                BOT_TOKEN, CHANNEL_ID, text);
-        restTemplate.getForObject(url, String.class);
+        String url = String.format("https://api.telegram.org/bot%s/sendMessage",
+                BOT_TOKEN);
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("chat_id", CHANNEL_ID);
+                requestBody.put("text", text);
+      //  restTemplate.getForObject(url, String.class);
+      String response = restTemplate.postForObject(url, requestBody, String.class);
 
         messages.remove(0);
 
