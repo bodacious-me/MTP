@@ -1,6 +1,5 @@
 package my.code.system.service;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -9,10 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,11 +20,9 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 
-
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 
 @Service
 @Component
@@ -38,6 +33,10 @@ public class DNSGenerator {
     NameGenerator nameGenerator;
     @Autowired
     JsonFileWriter jsonFileWriter;
+    @Autowired
+    JsonFileCleaner jsonFileCleaner;
+    @Autowired
+    DNSUpdater dnsUpdater;
 
     ObjectMapper objectMapper = new ObjectMapper();
     RestTemplate restTemplate = new RestTemplate();
@@ -45,17 +44,13 @@ public class DNSGenerator {
     ObjectMapper objectmapper = new ObjectMapper();
 
     public void DNSChanger() throws JsonMappingException, JsonProcessingException, UnsupportedEncodingException {
-        // Clean the names.json file:
-
-        try (FileWriter fileWriter = new FileWriter("./names.json", false)) {
-            fileWriter.write("");
-            System.out.println("Cleared Successfully");
-        } catch (IOException e) {
-            System.out.println("error Cleanering the file");
-            e.printStackTrace();
-        }
-        // Generate the random NameServers
+        // Resources :
         List<String> DomainNames = new ArrayList<>();
+        List<String> messages = new ArrayList<String>();
+
+        // Clean the names.json file:
+        jsonFileCleaner.cleaner();
+        // Generate the random NameServers
         for (int i = 0; i < 10; i++) {
             DomainNames.add(i, nameGenerator.nameGeneratorMethod());
         }
@@ -63,26 +58,9 @@ public class DNSGenerator {
         jsonFileWriter.writeFiles("./names.json", DomainNames);
 
         // Update the Dns records with the new random DNSs
+        dnsUpdater.updater(DomainNames);
 
-        for (int i = 0; i < 10; i++) {
-            String url = "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records/"
-                    + myProperties.getIds(i);
-            httpHeaders.set("Authorization", "Bearer iHkMqqopGkxto9nHnSgzQgh81vQYVAHtXXsapw-X");
-            httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-            String jsonPayload = "{"
-                    + "\"type\": \"A\","
-                    + "\"name\": \"" + DomainNames.get(i) + "\","
-                    + "\"content\": \"188.245.174.248\","
-                    + "\"ttl\": 3600,"
-                    + "\"proxied\": false"
-                    + "}";
-            HttpEntity<String> entity = new HttpEntity<>(jsonPayload, httpHeaders);
-            String response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class).getBody();
-            System.out.println(response);
-        }
-
-        // Publish the messages out
+        // save the Secrets and Ports
         HashMap<String, Integer> SecretAndPort = new HashMap<String, Integer>();
         SecretAndPort.put("f5ae58e59e5be1f76485e870e483f6ec", 2137);
         SecretAndPort.put("827428c8345247c17e57b7a3e11bb369", 2138);
@@ -94,77 +72,61 @@ public class DNSGenerator {
         SecretAndPort.put("f820a6ac6d7528192baa22e980756061", 2144);
         SecretAndPort.put("28e8248e358b041e23400242a236319a", 2145);
         SecretAndPort.put("43278b738febd9dc2130bea84f966af7", 2146);
-        List<String> messages = new ArrayList<String>();
+        // Generate the message:
+        // t.me/proxy?server=%s&port=%s&secret=%s
+
         for (String key : SecretAndPort.keySet()) {
             for (int j = 0; j < 10; j++) {
-                // messages.add("tg://proxy?server=" + DomainNames.get(j) + "&port=" +
-                // SecretAndPort.get(key)
-                // + "&secret=" + key);
-                // t.me/proxy?server=<server>&port=<port>&secret=<secret>
-                String proxyLink = String.format("hi \n t.me/proxy?server=%s&port=%s&secret=%s",
+                String proxyLink = String.format("♾♾♾♾♾♾♾♾♾\n" +
+                        "<a href=\"" + "t.me/proxy?server=%s&port=%s&secret=%s" + "\">Server   " + DomainNames.get(j)
+                        + "\n" +
+                        "Port     " + SecretAndPort.get(key) + "\n" +
+                        "Secret   " + key + "</a>\n" +
+                        "♾♾♾♾♾♾♾♾♾\n" +
+                        "Location 🇩🇪\n" +
+                        "♾♾♾♾♾♾♾♾♾\n" +
+                        "Sponsor @MTProxyMTP\n" +
+                        "♾♾♾♾♾♾♾♾♾",
                         DomainNames.get(j),
                         SecretAndPort.get(key),
                         key);
                 messages.add(proxyLink);
-// https://t.me/share/url?url=https%3A%2F%2Ft.me%2Fproxy%3Fserver%3DKamilla.Liora.Meghan.Karime.Jenson.Kenyon.Muad.com.eriofndiohvndi.shop%26port%3D2142%26secret%3D0954a8517132e5b213c254bb2b563dd2&text=click
-//https://t.me/proxy?server=Kamilla.Liora.Meghan.Karime.Jenson.Kenyo.Muad.com.eriofndiohvndi.shop&port=2142&secret=0954a8517132e5b213c254bb2b563dd2
             }
-            // 
             try {
-                objectMapper.writeValue(new File("./messages.json"),messages);
+                objectMapper.writeValue(new File("./messages.json"), messages);
             } catch (Exception e) {
                 System.out.println("Messages are not saved !!");
                 e.printStackTrace();
             }
-            // key : i
-            // value : SecretAndPort.get(i);
 
         }
-        // for (int k = 0; k < 100; k++) {
-        //     schechuler.schedule(() -> {
-        //         try {
-        //             sendMessages();
-        //         } catch (IOException e) {
-        //             System.out.println("Got Errors DickHead!! HAHAHAHAHAH");
-        //             e.printStackTrace();
-        //         }
-        //     }, k * 1, TimeUnit.HOURS);
-        // }
 
     }
 
     @Scheduled(fixedRate = 3600000, initialDelay = 60000)
     public void sendMessages() throws StreamReadException, DatabindException, IOException {
         System.out.println("Called the sendMessage method now!");
-        List<String> messages = null;
-
         // Read the JSON file and convert it to a List<String>
-        messages = objectMapper.readValue(new File("./messages.json"), new TypeReference<List<String>>() {
+        List<String> messages = objectMapper.readValue(new File("./messages.json"), new TypeReference<List<String>>() {
         });
-        // String text = String.format("Here is the MTProto proxy link: 
-        // href=\"%s\">Click Here</a>", messages.get(0));
         String text = messages.get(0);
-        RestTemplate restTemplate = new RestTemplate();
         String CHANNEL_ID = "@MTProxyMTP";
         String BOT_TOKEN = "7592458999:AAFRC9GHHXj--x9lqc5_17AB28E-HXKbNv4";
 
+        // print the text
         System.out.println(text);
 
-        // String url =
-        // String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s&parse_mode=HTML",
-        // BOT_TOKEN, CHANNEL_ID, shareUrl);
+        String url = String.format("https://api.telegram.org/bot%s/sendMessage", BOT_TOKEN);
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("chat_id", CHANNEL_ID);
+        requestBody.put("text", text);
+        requestBody.put("parse_mode", "HTML");
+        String response = restTemplate.postForObject(url, requestBody, String.class);
+        System.out.println(response);
 
-        String url = String.format("https://api.telegram.org/bot%s/sendMessage",
-                BOT_TOKEN);
-                Map<String, Object> requestBody = new HashMap<>();
-                requestBody.put("chat_id", CHANNEL_ID);
-                requestBody.put("text", text);
-      //  restTemplate.getForObject(url, String.class);
-      String response = restTemplate.postForObject(url, requestBody, String.class);
-      System.out.println(response);
-
+        // remove the used one
         messages.remove(0);
-
+        // update the files
         try {
             objectMapper.writeValue(new File("./messages.json"), messages);
         } catch (Exception e) {
@@ -174,35 +136,3 @@ public class DNSGenerator {
 
     }
 }
-// <a href="https://t.me/share/url?url=https%3A%2F%2Ft.me%2Fproxy%3Fserver%3DKamilla.Liora.Meghan.Karime.Jenson.Kenyon.Muad.com.eriofndiohvndi.shop%26port%3D2142%26secret%3D0954a8517132e5b213c254bb2b563dd2&text=click">Send via Telegram</a>
-// https://t.me/share/url?url=https%3A%2F%2Ft.me%2Fproxy%3Fserver%3DKamilla.Liora.Meghan.Karime.Jenson.Kenyon.Muad.com.eriofndiohvndi.shop%26port%3D2142%26secret%3D0954a8517132e5b213c254bb2b563dd2&text=click
-// cloudflare api token : iHkMqqopGkxto9nHnSgzQgh81vQYVAHtXXsapw-X
-// zone id: 207359c28ebf495446b657f15fb25a46
-
-// curl -X POST
-// "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records"
-// \
-// -H "Authorization: Bearer iHkMqqopGkxto9nHnSgzQgh81vQYVAHtXXsapw-X" \
-// -H "Content-Type: application/json" \
-// --data '{
-// "type": "A",
-// "name": "ikco.airbnb.telewebion.filimo.ir",
-// "content": "188.245.174.248",
-// "ttl": 3600,
-// "proxied": false
-// }'
-
-// a7bbe9c3e696ca889982ac32829f6c0a
-
-// curl -X PUT
-// "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records/a7bbe9c3e696ca889982ac32829f6c0a"
-// \
-// -H "Authorization: Bearer iHkMqqopGkxto9nHnSgzQgh81vQYVAHtXXsapw-X" \
-// -H "Content-Type: application/json" \
-// --data '{
-// "type": "A", # Type of the DNS record (e.g., A, CNAME)
-// "name": "newname.example.com", # New name for the DNS record
-// "content": "188.245.174.248", # Current IP address or content
-// "ttl": 3600, # Time to live
-// "proxied": false # Proxy status
-// }'
