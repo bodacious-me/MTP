@@ -3,11 +3,7 @@ package my.code.system.service;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,15 +23,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Service
 @Component
@@ -51,7 +43,6 @@ public class DNSGenerator {
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders httpHeaders = new HttpHeaders();
     ObjectMapper objectmapper = new ObjectMapper();
-    private final ScheduledExecutorService schechuler = Executors.newScheduledThreadPool(1);
 
     public void DNSChanger() throws JsonMappingException, JsonProcessingException, UnsupportedEncodingException {
         // Clean the names.json file:
@@ -72,7 +63,7 @@ public class DNSGenerator {
         jsonFileWriter.writeFiles("./names.json", DomainNames);
 
         // Update the Dns records with the new random DNSs
-        
+
         for (int i = 0; i < 10; i++) {
             String url = "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records/"
                     + myProperties.getIds(i);
@@ -110,7 +101,7 @@ public class DNSGenerator {
                 // SecretAndPort.get(key)
                 // + "&secret=" + key);
                 // t.me/proxy?server=<server>&port=<port>&secret=<secret>
-                String proxyLink = String.format("t.me/proxy?server=%s&port=%s&secret=%s",
+                String proxyLink = String.format("hi \n t.me/proxy?server=%s&port=%s&secret=%s",
                         DomainNames.get(j),
                         SecretAndPort.get(key),
                         key);
@@ -129,20 +120,20 @@ public class DNSGenerator {
             // value : SecretAndPort.get(i);
 
         }
-        for (int k = 0; k < 100; k++) {
-            schechuler.schedule(() -> {
-                try {
-                    sendMessages();
-                } catch (IOException e) {
-                    System.out.println("Got Errors DickHead!! HAHAHAHAHAH");
-                    e.printStackTrace();
-                }
-            }, k * 1, TimeUnit.HOURS);
-        }
+        // for (int k = 0; k < 100; k++) {
+        //     schechuler.schedule(() -> {
+        //         try {
+        //             sendMessages();
+        //         } catch (IOException e) {
+        //             System.out.println("Got Errors DickHead!! HAHAHAHAHAH");
+        //             e.printStackTrace();
+        //         }
+        //     }, k * 1, TimeUnit.HOURS);
+        // }
 
     }
 
-    @Scheduled(fixedRate = 3600000, initialDelay = 15000)
+    @Scheduled(fixedRate = 3600000, initialDelay = 60000)
     public void sendMessages() throws StreamReadException, DatabindException, IOException {
         System.out.println("Called the sendMessage method now!");
         List<String> messages = null;
@@ -171,6 +162,7 @@ public class DNSGenerator {
                 requestBody.put("text", text);
       //  restTemplate.getForObject(url, String.class);
       String response = restTemplate.postForObject(url, requestBody, String.class);
+      System.out.println(response);
 
         messages.remove(0);
 
