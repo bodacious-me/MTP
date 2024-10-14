@@ -141,9 +141,8 @@ public class DNSGenerator {
         // Read the JSON file and convert it to a List<String>
         messages = objectMapper.readValue(new File("./messages.json"), new TypeReference<List<String>>() {
         });
-        // String text = String.format("Here is the MTProto proxy link: <a
+        // String text = String.format("Here is the MTProto proxy link: 
         // href=\"%s\">Click Here</a>", messages.get(0));
-        // t.me/share?url=tg%3A%2F%2Fproxy%3Fserver%3DMaximilliano.Clarence.Kyia.Arial.Jayden.Francisco.Coralee.com.eriofndiohvndi.shop%26port%3D2145%26secret%3D28e8248e358b041e23400242a236319a&text=heheehe
         String text = messages.get(0);
         RestTemplate restTemplate = new RestTemplate();
         String CHANNEL_ID = "@MTProxyMTP";
