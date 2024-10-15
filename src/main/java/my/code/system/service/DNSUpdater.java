@@ -21,7 +21,7 @@ public class DNSUpdater {
     RestTemplate restTemplate = new RestTemplate();
 
     public void updater(List<String> DomainNames) {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             String url = "https://api.cloudflare.com/client/v4/zones/207359c28ebf495446b657f15fb25a46/dns_records/"
                     + myProperties.getIds(i);
             httpHeaders.set("Authorization", "Bearer iHkMqqopGkxto9nHnSgzQgh81vQYVAHtXXsapw-X");
